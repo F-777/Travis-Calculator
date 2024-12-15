@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travis Calculator</title>
+    <link rel="shortcut icon" type="image" href="c:\Users\ACER\Downloads\Rectangle 45.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #080808;
+        }
+        p {
+            color: rgb(22, 164, 0);
+        }
+        h1 {
+            color: rgb(22, 164, 0);
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            margin-bottom: 10px;
+            border: rgb(22, 164, 0);
+            background-color: #080808;
+            color: rgb(22, 164, 0);
+        }
+        textarea::placeholder {
+            color: rgb(22, 164, 0);
+        }
+        button {
+            margin-right: 10px;
+            margin-top: 10px;
+            width: 150px;
+            height: 50px;
+            background-color: #080808;
+            color:rgb(22, 164, 0);
+            border: rgb(22, 164, 0);
+            stroke: 2.3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Input your Matrix</h1>
+    <p>Enter matrices in JSON format, e.g., <code>[[1,2],[3,4],[5,6]]</code></p>
+
+    <br>
+
+    <textarea id="matrixA" placeholder="Matrix A"></textarea>
+    <textarea id="matrixB" placeholder="Matrix B"></textarea>
+    <textarea id="matrixC" placeholder="Matrix C"></textarea>
+
+    <button onclick="addMatrices()">Add A + B</button>
+    <button onclick="addThreeMatrices()">Add A + B + C</button>
+    <button onclick="subtractMatrices()">Subtract A - B</button>
+    <button onclick="multiplyMatrices()">Multiply A * B</button>
+    <button onclick="transposeMatrix('A')">Transpose A</button>
+    <button onclick="transposeMatrix('B')">Transpose B</button>
+    <button onclick="transposeMatrix('C')">Transpose C</button>
+    <button onclick="invertMatrix('A')">Invert A</button>
+    <button onclick="invertMatrix('B')">Invert B</button>
+    <button onclick="invertMatrix('C')">Invert C</button>
+
+    <h2>Result</h2>
+    <pre id="result"></pre>
+
+    <script>
+        function parseMatrix(inputId) {
+            try {
+                return JSON.parse(document.getElementById(inputId).value);
+            } catch (error) {
+                alert(`Invalid matrix format in ${inputId}`);
+                throw error;
+            }
+        }
+
+        function displayResult(matrix) {
+            document.getElementById('result').textContent = JSON.stringify(matrix, null, 2);
+        }
+
+        function addMatrices() {
+            const A = parseMatrix('matrixA');
+            const B = parseMatrix('matrixB');
+
+            if (A.length !== B.length || A[0].length !== B[0].length) {
+                alert('Matrices must have the same dimensions for addition!');
+                return;
+            }
+
+            const result = A.map((row, i) => row.map((val, j) => val + B[i][j]));
+            displayResult(result);
+        }
+
+        function addThreeMatrices() {
+            const A = parseMatrix('matrixA');
+            const B = parseMatrix('matrixB');
+            const C = parseMatrix('matrixC');
+
+            if (A.length !== B.length || A[0].length !== B[0].length || A.length !== C.length || A[0].length !== C[0].length) {
+                alert('All matrices must have the same dimensions for addition!');
+                return;
+            }
+
+            const result = A.map((row, i) => row.map((val, j) => val + B[i][j] + C[i][j]));
+            displayResult(result);
+        }
+
+        function subtractMatrices() {
+            const A = parseMatrix('matrixA');
+            const B = parseMatrix('matrixB');
+
+            if (A.length !== B.length || A[0].length !== B[0].length) {
+                alert('Matrices must have the same dimensions for subtraction!');
+                return;
+            }
+
+            const result = A.map((row, i) => row.map((val, j) => val - B[i][j]));
+            displayResult(result);
+        }
+
+        function multiplyMatrices() {
+            const A = parseMatrix('matrixA');
+            const B = parseMatrix('matrixB');
+
+            if (A[0].length !== B.length) {
+                alert('Number of columns in A must equal number of rows in B for multiplication!');
+                return;
+            }
+
+            const result = A.map(row => 
+                B[0].map((_, j) => 
+                    row.reduce((sum, val, k) => sum + val * B[k][j], 0)
+                )
+            );
+
+            displayResult(result);
+        }
+
+        function transposeMatrix(matrixId) {
+            const matrix = parseMatrix(`matrix${matrixId}`);
+            const result = matrix[0].map((_, i) => matrix.map(row => row[i]));
+            displayResult(result);
+        }
+
+        function invertMatrix(matrixId) {
+            const matrix = parseMatrix(`matrix${matrixId}`);
+
+            if (matrix.length !== matrix[0].length) {
+                alert('Only square matrices can be inverted!');
+                return;
+            }
+
+            const size = matrix.length;
+            const identity = Array.from({ length: size }, (_, i) => 
+                Array.from({ length: size }, (_, j) => (i === j ? 1 : 0))
+            );
+
+            const augmented = matrix.map((row, i) => [...row, ...identity[i]]);
+
+            for (let i = 0; i < size; i++) {
+                let diagElement = augmented[i][i];
+                if (diagElement === 0) {
+                    alert('Matrix is singular and cannot be inverted!');
+                    return;
+                }
+
+                for (let j = 0; j < augmented[i].length; j++) {
+                    augmented[i][j] /= diagElement;
+                }
+
+                for (let k = 0; k < size; k++) {
+                    if (k !== i) {
+                        const factor = augmented[k][i];
+                        for (let j = 0; j < augmented[k].length; j++) {
+                            augmented[k][j] -= factor * augmented[i][j];
+                        }
+                    }
+                }
+            }
+
+            const result = augmented.map(row => row.slice(size));
+            displayResult(result);
+        }
+    </script>
+</body>
+</html>
